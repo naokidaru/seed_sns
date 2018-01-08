@@ -1,40 +1,48 @@
-<?php
- session_start();
- require('../dbconect.php');
+<?php 
+  session_start();
+  //DBに接続
+  require('../dbconnect.php');
 
+  // 会員ボタンが押されたとき（POST送信されたとき）
+  if (isset($_POST) && !empty($_POST)) {
+    //変数に入力された値を代入して扱いやすいようにする
+    $nick_name = $_SESSION['join']['nick_name'];
+    $email = $_SESSION['join']['email'];
+    $password = $_SESSION['join']['password'];
+    $picture_path = $_SESSION['join']['picture_path'];
 
- //会員ボタンが押された時(post送信された時)
- if (isset($_POST) && !empty($_POST)){
-   //変数に入力された値を代入して扱いやすいようにする
-  $nick_name = $_SESSION['join']['nick_name'];
-  $email = $_SESSION['join']['email'];
-  $password = $_SESSION['join']['password'];
-  $picture_path = '';
-
-  try {
+    try {
     //DBに会員情報を登録するSQL文を作成
-    //now()mysql が用意してくれている関数　現在日時を習得できる
-  $sql = "INSERT INTO `members`(`nick_name`, `email`, `password`, `picture_path`, `created`, `modified`) VALUES (?,?,?,?,now(),now()) ";
-  //sql文実行
-  $data = array($nick_name,$email,$password,$picture_path);
-  $stmt = $dbh->prepare($sql);
-  $stmt ->execute($data);
-  //$_sessionの情報削
+      // now() MySQLが用意してくれている関数。現在日時を取得できる
+      $sql = "INSERT INTO `members`( `nick_name`, `email`, `password`, `picture_path`, `created`, `modified`) VALUES (?,?,?,?,now(),now())";
 
+    //SQL文を実行
+      // sha1 暗号化を行う関数
+      $data = array($nick_name,$email,sha1($password),$picture_path);
+      $stmt = $dbh->prepare($sql);
+      $stmt->execute($data);
 
-  //thanks.php
+    //$_SESSIONの情報を削除
+      // unset 指定した変数を削除するという意味。SESSIONじゃなくても使える
+      unset($_SESSION["join"]);
+
+    //thanks.phpへ遷移
+      header('Location: thanks.php');
+      exit();
+      
+    } catch (Exception $e) {
+      //tryで囲まれた処理でエラーが発生したときに、やりたい処理を記述する場所
+      echo 'SQL実行エラー:'.$e->getMessage();
+      exit();
+      
+    }
+
     
-  } catch (Exception $e) {
-    //tryで囲まれた処理でエラーが発生した時やりたい場所
-    echo 'SQL実行エラー:'.$e->getMeessage();
-    exit();
+
   }
 
- 
-
-
-}
 ?>
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -89,11 +97,11 @@
                 <!-- 登録内容を表示 -->
                 <tr>
                   <td><div class="text-center">ニックネーム</div></td>
-                  <td><div class="text-center"><?php echo $_SESSION['join']['nick_name'];?></div></td>
+                  <td><div class="text-center"><?php echo $_SESSION['join']['nick_name']; ?></div></td>
                 </tr>
                 <tr>
                   <td><div class="text-center">メールアドレス</div></td>
-                  <td><div class="text-center"><?php echo $_SESSION['join']['email'];?></div></td>
+                  <td><div class="text-center"><?php echo $_SESSION['join']['email']; ?></div></td>
                 </tr>
                 <tr>
                   <td><div class="text-center">パスワード</div></td>
@@ -101,12 +109,14 @@
                 </tr>
                 <tr>
                   <td><div class="text-center">プロフィール画像</div></td>
-                  <td><div class="text-center"><img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="100" height="100"></div></td>
+                  <td><div class="text-center"><!-- <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="100" height="100"> -->
+                    <img src="../picture_path/<?php echo $_SESSION['join']['picture_path']; ?>" width="100" height="100">
+                  </div></td>
                 </tr>
               </tbody>
             </table>
 
-            <a href="index.html">&laquo;&nbsp;書き直す</a> |
+            <a href="index.php?action=rewrite">&laquo;&nbsp;書き直す</a> |
             <input type="submit" class="btn btn-default" value="会員登録">
           </div>
         </form>

@@ -1,47 +1,108 @@
 <?php
-session_start();  //sesssionを使う時絶対必要
-//ポスト送信された時
-//$_POSTという変数が存在しているかつ
-//empty...中身が空か判定する
-if (isset($_POST) && !empty($_POST)){
-  //入力チェック
+  session_start(); //SESSIONを使うときは絶対必要
 
- //ニックネーム
-  if($_POST["nick_name"]==''){
-  $error['nick_name']='blank';
- }
- //email
-
- if($_POST["email"]==''){
-  $error['email']='blank';
- }
- //password
- //stlen 文字長さを数字で返してくれる関数
+  // SESSION変数は、サイトを訪れた個々のユーザーのデータを個別に管理する機能を提供する　
+  // SESSION変数は、連続するリクエストにまたがって特定のデータを保持する
   
-if($_POST["password"]==''){
-  $error['password']='blank';
-}elseif (strlen($_POST["password"]) < 4) {
-  $error["password"] = 'length';
-}
-//入力チェック後、エラーがなければcheck.phpに移動
-//$errorが存在してなかったら場合入力が正常
-if (!isset($error)){
-  //SESION変数に入力された値を入力された値を保存(どこの画面からも利用できる)
-  //注意！必ずファイルの一番上にsession_start()
-  //post送信されたjoinというキーで保存
-  $_SESSION['join'] = $_POST;
+  // 書き直し処理（check.phpで書き直し、というボタンが押された時）
+  if (isset($_GET['action']) && $_GET['action'] =='rewrite'){
 
-  //CHECK.PHPに移動
- header('Location: check.php');
+    // 書き直すために初期表示する情報を変数に格納
+    $nick_name = $_SESSION['join']['nick_name'];
+    $email = $_SESSION['join']['email'];
+    $password = $_SESSION['join']['password'];
 
-  //これ以下のコードを無駄に処理しないようにこのページの処理を終了させる。  
-exit();
 
-}
+
+  }else{
+    // 通常の初期表示
+    $nick_name = '';
+    $email = '';
+    $password = '';
+  }
+
+
+
+
+
+// POST送信された時
+// if文の中身-> $_POSTという変数が存在している、かつ、$_POSTという変数の中身が空ではないとき
+// !-> 逆の意味
+// emptyは中身が空か判定する。0,"",null,falseというものを全て空と認識する
+ if(isset($_POST) && !empty($_POST)){
+
+ // 入力チェック
+  // ニックネームが空だったら$errorという、エラーの情報を格納する変数にnick_nameはblankだったというマークを保存しておく
+  if ($_POST["nick_name"]==''){
+    $error['nick_name'] = 'blank';
+  }
   
- }
+  if ($_POST["email"]==''){
+    $error['email'] = 'blank';
+  }
+  // password
+  // strlen 文字の長さ（文字数）を数字で返しえてくれる関数
+  if ($_POST["password"]==''){
+    $error['password'] = 'blank';
+  } elseif (strlen($_POST["password"]) < 4){
+    $error["password"] = 'length';
+  }
 
-  ?>
+  // 入力チェック後、エラーが何もなければ、check.phpに移動
+  // $errorという変数が存在していなかった場合、入力が正常と認識
+  if (!isset($error)){
+
+    // 画像の拡張子チェック
+    // jpg,png,gifはok
+    // substr...文字列から範囲指定して一部分の文字を切り出す関数
+    // substr(文字列、切り出す文字のスタートの数)　マイナスの場合は、末尾からn文字目
+    // 例) 1.pngがファイル名の場合、$extにはpngが代入される
+
+    $ext = substr($_FILES['picture_path']['name'], -3);
+
+    if(($ext == 'png') || ($ext == 'jpg') || ($ext == 'gif')){
+
+    // 画像のアップロード処理
+    // 例）kana1.pngを指定した場合、$picture_nameの中身は20171222142530kana1.pngというような文字列が代入される
+    // YmdHis = Year, month, day, Hour, i...minutes, second
+    // ファイル名の決定
+    // 下記はindex.phpでしか使えない。
+    $picture_name = date('YmdHis') . $_FILES['picture_path']['name'];
+
+    // アップロード(フォルダに書き込み権限がないと保存されない！！書き込み権限は必須)
+    // move_uploaded_file(アップロードしたいファイル, サーバーのどこにどういう名前でアップロードしたいか相対パスで指定)
+    move_uploaded_file($_FILES['picture_path']['tmp_name'], '../picture_path/' . $picture_name);
+
+
+
+    // SESSION変数に入力された値を保存（変数をSESSIONに登録する）(どこの画面からでも利用できる！)
+    // 注意！必ずファイルの一番上にsession_start();と書く
+    // POST送信された情報をjoinというキー指定で保存
+    $_SESSION['join'] = $_POST;
+    $_SESSION['join']['picture_path'] = $picture_name;    //他のページ（index.php以外のページで使うために、セッション変数を使い、代入する）
+     // check.phpに移動
+    header('Location: check.php');
+    // これ以下のコードを無駄に処理しないように、このページの処理を終了させる
+    exit();
+
+    }else {
+      $error["image"] = 'type';
+
+    }
+
+    
+  }
+ 
+
+
+
+ }
+ 
+
+
+
+?>
+
 
 <!DOCTYPE html>
 <html lang="ja">
@@ -90,42 +151,37 @@ exit();
     <div class="row">
       <div class="col-md-6 col-md-offset-3 content-margin-top">
         <legend>会員登録</legend>
-        <form method="post" action="" class="form-horizontal" role="form">
+        <form method="post" action="" class="form-horizontal" role="form" enctype="multipart/form-data">
           <!-- ニックネーム -->
           <div class="form-group">
             <label class="col-sm-4 control-label">ニックネーム</label>
             <div class="col-sm-8">
-              <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun">
-              <?php if((isset($error["nick_name"])) && ($error['nick_name']=='blank')){?>
-              <p class="error">＊ ニックネームを入力してください。</p>
-              <?php }?>
+              <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun" value="<?php echo $nick_name; ?>">
+              <?php if((isset($error["nick_name"])) && ($error['nick_name'] == 'blank')){ ?>
+              <p class="error">* ニックネームを入力してください。</p>
+              <?php } ?>
             </div>
           </div>
           <!-- メールアドレス -->
           <div class="form-group">
             <label class="col-sm-4 control-label">メールアドレス</label>
             <div class="col-sm-8">
-              <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com">
-              <?php if ((isset($error ["email"])) && ($error['email']=='blank'))
-              
-             { ?>
-              <p class="error">*メールアドレスを入力してください。</p>
+              <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com" value="<?php echo $email; ?>">
+              <?php if((isset($error["email"])) && ($error['email'] == 'blank')) { ?>
+              <p class="error">* メールアドレスを入力してください。</p>
               <?php } ?>
-            </div>
+            </div>        
           </div>
           <!-- パスワード -->
           <div class="form-group">
             <label class="col-sm-4 control-label">パスワード</label>
             <div class="col-sm-8">
-              <input type="password" name="password" class="form-control" placeholder="">
-              <?php if ((isset($error ["password"])) && ($error['password']=='blank'))
-              {  ?>
-              <p class="error">＊パスワードを入力してください。</p>
+              <input type="password" name="password" class="form-control" placeholder="" value="<?php echo $password; ?>">
+              <?php if((isset($error["password"])) && ($error['password'] == 'blank')) { ?>
+              <p class="error">* パスワードを入力してください。</p>
               <?php } ?>
-
-              <?php if ((isset($error ["password"])) && ($error['password']=='length'))
-              {  ?>
-              <p class="error">＊パスワードは４文字以上入力してください。</p>
+              <?php if((isset($error["password"])) && ($error['password'] == 'length')) { ?>
+              <p class="error">* パスワードは４文字以上を入力してください。</p>
               <?php } ?>
             </div>
           </div>
@@ -134,6 +190,9 @@ exit();
             <label class="col-sm-4 control-label">プロフィール写真</label>
             <div class="col-sm-8">
               <input type="file" name="picture_path" class="form-control">
+              <?php if((isset($error["image"])) && ($error['image'] == 'type')) { ?>
+              <p class="error">* 画像ファイルを選択してください。</p>
+              <?php } ?>
             </div>
           </div>
 
@@ -144,7 +203,7 @@ exit();
   </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="../ass?ets/js/jquery-3.1.1.js"></script>
+    <script src="../assets/js/jquery-3.1.1.js"></script>
     <script src="../assets/js/jquery-migrate-1.4.1.js"></script>
     <script src="../assets/js/bootstrap.js"></script>
   </body>
