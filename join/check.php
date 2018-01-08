@@ -1,7 +1,7 @@
 <?php 
   session_start();
   //DBに接続
-  require('../dbconnect.php');
+  require('../dbconect.php');
 
   // 会員ボタンが押されたとき（POST送信されたとき）
   if (isset($_POST) && !empty($_POST)) {

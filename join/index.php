@@ -11,8 +11,7 @@
     $nick_name = $_SESSION['join']['nick_name'];
     $email = $_SESSION['join']['email'];
     $password = $_SESSION['join']['password'];
-
-
+    
 
   }else{
     // 通常の初期表示
