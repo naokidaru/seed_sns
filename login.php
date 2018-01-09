@@ -1,3 +1,35 @@
+<?php 
+
+//DBに接続
+  require('dbconect.php');
+
+//POST送信されてた
+  if(isset($_POST) && !empty($_POST)){
+  //認証処理
+  try {
+      //メンバーズテーブルでテーブルの中からメールアドレスとパスワードが入力された
+     //データを収得
+    $sql = "SELECT * FROM `members` WHERE `email`=? AND `password`=? ";
+
+    //sql文実行
+    //パスワードは入力されたものを暗号化した上使用＄$-
+    $data = array($_POST["email"],sha1($_POST["password"]));
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($data);
+    //一行取得
+    $member = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo "<pre>";
+    var_dump($member);
+    echo "</pre>";
+
+    } catch (Exception $e) {
+      
+    }  
+
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
