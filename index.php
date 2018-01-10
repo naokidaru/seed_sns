@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+require('dbconect.php');
+
+
 //ログインチェック
 if (isset($_SESSION['id'])) {
   //ログインしてる
@@ -9,6 +12,56 @@ if (isset($_SESSION['id'])) {
   header("Location: login.php");
   exit();
 }
+
+//---------------post送信されていたら、つぶやきをINSERTで保存
+if (isset($_POST) && !empty($_POST)) {
+    //変数に入力された値を代入して扱いやすいようにする
+    $tweet= $_POST['tweet'];
+    $member_id = $_SESSION['id'];
+    
+    
+
+
+    try {
+    //DBに会員情報を登録するSQL文を作成
+      // now() MySQLが用意してくれている関数。現在日時を取得できる
+      $sql = "INSERT INTO `tweets`(`tweet`, `member_id`, `reply_tweet_id`, `created`, `modified`) VALUES (?,?,-1,now(),now()) ";
+
+    //SQ L文を実行
+      $data = array($tweet, $member_id);
+      $stmt = $dbh->prepare($sql);
+      $stmt->execute($data);
+
+    
+    //thanks.phpへ遷移
+      header('Location: index.php');
+      exit();
+      
+    } catch (Exception $e) {
+      
+      
+    }
+
+    
+
+  }     
+
+      
+
+//ーーーーーーーーーーーーーーーーーーー表示用のデータ取得ーーーーーーーーーーーー
+try {
+  //ログインしている人の情報を取得
+      $sql ="SELECT * FROM `members` WHERE `member_id` =".$_SESSION["id"];
+
+      $stmt = $dbh->prepare($sql);
+      $stmt->execute();
+
+      $login_member = $stmt->fetch(PDO::FETCH_ASSOC);
+  
+} catch (Exception $e) {
+  
+}
+
 
 
 
@@ -57,7 +110,7 @@ if (isset($_SESSION['id'])) {
   <div class="container">
     <div class="row">
       <div class="col-md-4 content-margin-top">
-        <legend>ようこそ●●さん！</legend>
+        <legend>ようこそ<?php echo $login_member["nick_name"];?>さん！</legend>
         <form method="post" action="" class="form-horizontal" role="form">
             <!-- つぶやき -->
             <div class="form-group">
