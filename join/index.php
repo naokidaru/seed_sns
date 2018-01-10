@@ -1,6 +1,7 @@
 <?php
   session_start(); //SESSIONを使うときは絶対必要
 
+  require('../dbconect.php');
   // SESSION変数は、サイトを訪れた個々のユーザーのデータを個別に管理する機能を提供する　
   // SESSION変数は、連続するリクエストにまたがって特定のデータを保持する
   
@@ -50,6 +51,32 @@
   // 入力チェック後、エラーが何もなければ、check.phpに移動
   // $errorという変数が存在していなかった場合、入力が正常と認識
   if (!isset($error)){
+   
+    //emailの重複チェック
+    //dbに同じemailがあるか確認
+    //as 別名　取得したデータで別の名前をつけ扱いやすくする
+    try {
+      $sql = "SELECT COUNT(*) as `cnt` FROM `members` WHERE `email`=?";
+      //sql
+      $data = array($_POST["email"]);
+      $stmt = $dbh->prepare($sql);
+      $stmt->execute($data);
+
+      //件数取得
+      $count = $stmt->fetch(PDO::FETCH_ASSOC);
+
+      if ($count['cnt'] > 0){
+
+        $error['email'] = "duplicated";
+      }
+
+    } catch (Exception $e) {
+      
+    }
+
+    if (!isset($error)) {
+      
+    
 
     // 画像の拡張子チェック
     // jpg,png,gifはok
@@ -98,7 +125,7 @@
  }
  
 
-
+}
 
 ?>
 
@@ -168,6 +195,10 @@
               <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com" value="<?php echo $email; ?>">
               <?php if((isset($error["email"])) && ($error['email'] == 'blank')) { ?>
               <p class="error">* メールアドレスを入力してください。</p>
+              <?php } ?>
+
+              <?php if((isset($error["email"])) && ($error['email'] == 'duplicated')) { ?>
+              <p class="error">* 入力されたemailは登録済みです。</p>
               <?php } ?>
             </div>        
           </div>
