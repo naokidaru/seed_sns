@@ -35,7 +35,7 @@ if (isset($_COOKIE["email"]) && !empty($_COOKIE["email"])){
     if($member == false){
       //認証失敗
       $error["login"] = "failed";
-    }else{
+      }else{
       //認証成功
       //1,セッション変数に会員idを保存
       $_SESSION["id"] = $member["member_id"];
