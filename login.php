@@ -3,7 +3,7 @@ session_start();
 
 //クッキー情報が存在してたら（自動ログイン）
 //
-if (session($_COOKIE["email"]) && !empty($_COOKIE["email"])){
+if (isset($_COOKIE["email"]) && !empty($_COOKIE["email"])){
   $_POST["email"] = $_COOKIE["email"];
   $_POST["password"] = $_COOKIE["password"];
   $_POST["save"] = "on";
@@ -55,8 +55,8 @@ if (session($_COOKIE["email"]) && !empty($_COOKIE["email"])){
       header("Location: index.php");
       exit();
      }
-      }
-    } catch (Exception $e) {
+      
+     }catch (Exception $e) {
        
     }  
 
