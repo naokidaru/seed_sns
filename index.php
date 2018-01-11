@@ -14,7 +14,8 @@ if (isset($_SESSION['id'])) {
 }
 
 //---------------post送信されていたら、つぶやきをINSERTで保存
-if (isset($_POST) && !empty($_POST)) {
+//$_POST["tweet"]-> "$_POST"空だと思われない
+if (isset($_POST) && !empty($_POST["tweet"])) {
     //変数に入力された値を代入して扱いやすいようにする
     $tweet= $_POST['tweet'];
     $member_id = $_SESSION['id'];
@@ -25,14 +26,16 @@ if (isset($_POST) && !empty($_POST)) {
     try {
     //DBに会員情報を登録するSQL文を作成
       // now() MySQLが用意してくれている関数。現在日時を取得できる
-      $sql = "INSERT INTO `tweets`(`tweet`, `member_id`, `reply_tweet_id`, `created`, `modified`) VALUES (?,?,-1,now(),now()) ";
+      //SQL文作成
+      //$sql = "INSERT INTO `tweets`(`tweet`, `member_id`, `reply_tweet_id`, `created`, `modified`) VALUES (?,?,-1,now(),now()) ";
+
+      $sql = "INSERT INTO `tweets`(`tweet`, `member_id`, `reply_tweet_id`, `created`) VALUES (?,?,?,now()) ";
 
     //SQ L文を実行
-      $data = array($tweet, $member_id);
+      $data = array($_POST["tweet"],$_SESSION["id"],-1);
       $stmt = $dbh->prepare($sql);
       $stmt->execute($data);
 
-    
     //thanks.phpへ遷移
       header('Location: index.php');
       exit();
@@ -46,6 +49,7 @@ if (isset($_POST) && !empty($_POST)) {
 
   }     
 
+    
       
 
 //ーーーーーーーーーーーーーーーーーーー表示用のデータ取得ーーーーーーーーーーーー
